@@ -28,6 +28,8 @@ while True:
       print("exit!")
       sys.exit()
 
+
+
    if keys[pygame.K_LEFT]:
       for _actor in group.sprites():
          _actor.move_hor(10)
