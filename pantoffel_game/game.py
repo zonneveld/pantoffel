@@ -15,7 +15,8 @@ if platform.system() == 'Linux':
    def system_start():
       GPIO.setmode(GPIO.BCM)
       GPIO.setup(pinData['test'],GPIO.IN)
-      GPIO.add_event_callback(pinData['test'],btn_test,GPIO.RISING)
+      GPIO.add_event_detect(pinData['test'], GPIO.RISING, callback=btn_test, bouncetime=200)
+      # GPIO.add_event_callback(pinData['test'],btn_test,GPIO.RISING)
       
       # GPIO.add_event_callback(4,)
       pass
