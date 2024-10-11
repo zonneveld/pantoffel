@@ -1,5 +1,39 @@
+import platform
 import pygame,sys
 import gameobjects
+
+if platform.system() == 'Linux':
+   import RPi.GPIO as GPIO
+   
+   pinData = {}
+   pinData['test'] = 4
+
+   GPIO.setmode(GPIO.BCM) 
+   def btn_test(channel):
+      print(f'edge on:{channel}')
+
+   def system_start():
+      GPIO.setmode(GPIO.BCM)
+      GPIO.setup(pinData['test'],GPIO.IN)
+      GPIO.add_event_callback(pinData['test'],btn_test,GPIO.RISING)
+      
+      # GPIO.add_event_callback(4,)
+      pass
+
+   def system_end():
+      GPIO.cleanup() 
+
+
+
+elif platform.system() == 'Windows':
+   def system_start():
+      pass
+   def system_end():
+      pass
+
+
+
+system_start()
 
 pygame.init()
 
@@ -18,20 +52,16 @@ group = pygame.sprite.RenderPlain()
 group.add(actor)
 group.add(actor2)
 
-while True:
+running = True
+
+while running:
    for event in pygame.event.get():
       if event.type == pygame.QUIT:
-         pygame.quit()
-         print("exit!")
-         sys.exit()
+         running = False
 
    keys = pygame.key.get_pressed()
    if keys[pygame.K_ESCAPE]:
-      pygame.quit()
-      print("exit!")
-      sys.exit()
-
-
+      running = False
 
    if keys[pygame.K_LEFT]:
       for _actor in group.sprites():
@@ -58,3 +88,7 @@ while True:
    group.draw(screen)
    pygame.display.flip()
    clock.tick(60)
+
+pygame.quit()
+print("exit!")
+system_end()
