@@ -3,13 +3,16 @@ import gameobjects
 
 pygame.init()
 
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+screen = pygame.display.set_mode([640, 640])
 pygame.display.set_caption("Hello World")
 
 clock = pygame.time.Clock()
 
-actor=  gameobjects.Actor(r'C:\Users\Jeroen\pantoffel\pantoffel\pantoffel_game\ball.png',(640/2,50))
-actor2=  gameobjects.Actor(r'C:\Users\Jeroen\pantoffel\pantoffel\pantoffel_game\ball.png',(640/2,100))
+actor=  gameobjects.Actor(r'arrow.png',(640/2,50))
+actor2=  gameobjects.Actor(r'arrow.png',(640/2,100))
+
+troepsound = pygame.mixer.Sound("troep.wav")
+
 
 group = pygame.sprite.RenderPlain()
 group.add(actor)
@@ -42,9 +45,16 @@ while True:
    if keys[pygame.K_DOWN]:
       for _actor in group.sprites():
          _actor.move_ver(-10)
+   if keys[pygame.K_SPACE]:
+      if not pygame.mixer.get_busy():
+         pygame.mixer.Sound.play(troepsound)
+      # pass
+      # for _actor in group.sprites():
+      #    _actor.move_ver(-10)
 
    group.update()
    screen.fill((0,0,0))
+   # screen.convert_alpha()
    group.draw(screen)
    pygame.display.flip()
    clock.tick(60)
