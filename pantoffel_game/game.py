@@ -2,6 +2,8 @@ import platform
 import pygame,sys
 import gameobjects
 
+pulse_count = 0
+
 if platform.system() == 'Linux':
    import RPi.GPIO as GPIO
    
@@ -9,6 +11,10 @@ if platform.system() == 'Linux':
    pinData['test'] = 4
 
    GPIO.setmode(GPIO.BCM) 
+   def enc(channel):
+      global pulse_count
+      pulse_count += 1
+
    def btn_test(channel):
       print(f'edge on:{channel}')
 
@@ -41,10 +47,12 @@ pygame.init()
 screen = pygame.display.set_mode([640, 640])
 pygame.display.set_caption("Hello World")
 
+[w,h] = pygame.display.get_window_size()
+
 clock = pygame.time.Clock()
 
-actor=  gameobjects.Actor(r'arrow.png',(640/2,50))
-actor2=  gameobjects.Actor(r'arrow.png',(640/2,100))
+actor=  gameobjects.Actor(r'arrow.png',(w/2,h/2))
+actor2=  gameobjects.Actor(r'arrow.png',(w/2,h/2 + 50))
 
 troepsound = pygame.mixer.Sound("troep.wav")
 
@@ -79,16 +87,17 @@ while running:
    if keys[pygame.K_SPACE]:
       if not pygame.mixer.get_busy():
          pygame.mixer.Sound.play(troepsound)
-      # pass
-      # for _actor in group.sprites():
-      #    _actor.move_ver(-10)
+   if not pulse_count:
+      actor.move_ver(pulse_count)
+      pulse_count = 0
+
 
    group.update()
    screen.fill((0,0,0))
    # screen.convert_alpha()
    group.draw(screen)
    pygame.display.flip()
-   clock.tick(60)
+   clock.tick(30)
 
 pygame.quit()
 print("exit!")
