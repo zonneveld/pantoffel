@@ -88,7 +88,7 @@ while running:
    if keys[pygame.K_SPACE]:
       if not pygame.mixer.get_busy():
          pygame.mixer.Sound.play(troepsound)
-   if not pulse_count:
+   if pulse_count:
       print(f'stepping: {pulse_count}')
       actor.move_ver(pulse_count)
       pulse_count = 0
