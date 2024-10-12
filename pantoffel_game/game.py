@@ -14,6 +14,7 @@ if platform.system() == 'Linux':
    def enc(channel):
       global pulse_count
       pulse_count += 1
+      
 
    def btn_test(channel):
       print(f'edge on:{channel}')
@@ -21,7 +22,7 @@ if platform.system() == 'Linux':
    def system_start():
       GPIO.setmode(GPIO.BCM)
       GPIO.setup(pinData['test'],GPIO.IN,pull_up_down=GPIO.PUD_DOWN)
-      GPIO.add_event_detect(pinData['test'], GPIO.RISING, callback=btn_test, bouncetime=200)
+      GPIO.add_event_detect(pinData['test'], GPIO.RISING, callback=enc)
       # GPIO.add_event_callback(pinData['test'],btn_test,GPIO.RISING)
       
       # GPIO.add_event_callback(4,)
@@ -88,6 +89,7 @@ while running:
       if not pygame.mixer.get_busy():
          pygame.mixer.Sound.play(troepsound)
    if not pulse_count:
+      print(f'stepping: {pulse_count}')
       actor.move_ver(pulse_count)
       pulse_count = 0
 
