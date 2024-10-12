@@ -47,6 +47,8 @@ pygame.init()
 
 # screen = pygame.display.set_mode([640, 640])
 screen = pygame.display.set_mode((0, 0),pygame.FULLSCREEN )
+pygame.mouse.set_visible(False) 
+
 pygame.display.set_caption("Hello World")
 
 [w,h] = pygame.display.get_window_size()
