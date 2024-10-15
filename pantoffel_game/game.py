@@ -35,7 +35,7 @@ if platform.system() == 'Linux':
       GPIO.setup(Z_ENC1, GPIO.IN)
       GPIO.setup(Z_ENC2, GPIO.IN)
       
-      GPIO.add_event_callback(Z_ENC1,z_encoder_event,GPIO.RISING)
+      GPIO.add_event_detect(Z_ENC1,GPIO.RISING,z_encoder_event)
       # GPIO.setup(pinData['test'],GPIO.IN,pull_up_down=GPIO.PUD_DOWN)
       # GPIO.add_event_detect(pinData['test'], GPIO.RISING, callback=enc)
       # GPIO.add_event_callback(pinData['test'],btn_test,GPIO.RISING)
@@ -114,9 +114,9 @@ while running:
       if not pygame.mixer.get_busy():
          pygame.mixer.Sound.play(troepsound)
    if z_pulse:
-      print(f'stepping: {pulse_count}')
-      actor.move_ver(pulse_count)
-      pulse_count = 0
+      print(f'stepping: {z_pulse}')
+      actor.move_ver(z_pulse)
+      z_pulse = 0
 
 
    group.update()
