@@ -4,9 +4,11 @@ import gameobjects
 
 pulse_count = 0
 
+on_device = False
+
 if platform.system() == 'Linux':
    import RPi.GPIO as GPIO
-   
+
    pinData = {}
    pinData['test'] = 4
 
@@ -27,6 +29,8 @@ if platform.system() == 'Linux':
       
       # GPIO.add_event_callback(4,)
       pass
+   def screen_setup():
+      return pygame.display.set_mode((0, 0),pygame.FULLSCREEN )      
 
    def system_end():
       GPIO.cleanup() 
@@ -38,6 +42,9 @@ elif platform.system() == 'Windows':
       pass
    def system_end():
       pass
+   def screen_setup():
+      return pygame.display.set_mode([640, 640])
+
 
 
 
@@ -46,7 +53,9 @@ system_start()
 pygame.init()
 
 # screen = pygame.display.set_mode([640, 640])
-screen = pygame.display.set_mode((0, 0),pygame.FULLSCREEN )
+
+screen = screen_setup()
+
 pygame.mouse.set_visible(False) 
 
 pygame.display.set_caption("Hello World")
