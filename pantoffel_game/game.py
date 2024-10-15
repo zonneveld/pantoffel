@@ -21,10 +21,11 @@ if platform.system() == 'Linux':
       
    def z_encoder_event(channel):
       global z_pulse
-      if GPIO.input(Z_ENC2):
-         z_pulse += 1
-      else:
-         z_pulse -= 1
+      if GPIO.input(Z_ENC1):
+         if GPIO.input(Z_ENC2):
+            z_pulse += 1
+         else:
+            z_pulse -= 1
       
 
    def btn_test(channel):
