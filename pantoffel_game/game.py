@@ -2,6 +2,9 @@ import platform
 import pygame,sys
 import gameobjects
 
+Z_ENC1 = 17
+Z_ENC2 = 27
+
 pulse_count = 0
 
 on_device = False
@@ -9,13 +12,19 @@ on_device = False
 if platform.system() == 'Linux':
    import RPi.GPIO as GPIO
 
-   pinData = {}
-   pinData['test'] = 4
+   z_pulse = 0
 
    GPIO.setmode(GPIO.BCM) 
    def enc(channel):
       global pulse_count
       pulse_count += 1
+      
+   def z_encoder_event(channel):
+      global z_pulse
+      if GPIO.input(Z_ENC2):
+         z_pulse += 1
+      else:
+         z_pulse -= 1
       
 
    def btn_test(channel):
@@ -23,8 +32,12 @@ if platform.system() == 'Linux':
 
    def system_start():
       GPIO.setmode(GPIO.BCM)
-      GPIO.setup(pinData['test'],GPIO.IN,pull_up_down=GPIO.PUD_DOWN)
-      GPIO.add_event_detect(pinData['test'], GPIO.RISING, callback=enc)
+      GPIO.setup(Z_ENC1, GPIO.IN)
+      GPIO.setup(Z_ENC2, GPIO.IN)
+      
+      GPIO.add_event_callback(Z_ENC1,z_encoder_event,GPIO.RISING)
+      # GPIO.setup(pinData['test'],GPIO.IN,pull_up_down=GPIO.PUD_DOWN)
+      # GPIO.add_event_detect(pinData['test'], GPIO.RISING, callback=enc)
       # GPIO.add_event_callback(pinData['test'],btn_test,GPIO.RISING)
       
       # GPIO.add_event_callback(4,)
@@ -100,7 +113,7 @@ while running:
    if keys[pygame.K_SPACE]:
       if not pygame.mixer.get_busy():
          pygame.mixer.Sound.play(troepsound)
-   if pulse_count:
+   if z_pulse:
       print(f'stepping: {pulse_count}')
       actor.move_ver(pulse_count)
       pulse_count = 0
