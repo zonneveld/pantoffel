@@ -30,13 +30,14 @@ def rotary_callback(channel):
         else:  # A and B are different (CCW)
             counter -= 1
             direction = "Counterclockwise"
+        print(f"Direction: {direction}, Counter: {counter}")
 
     # Save the current states for the next interrupt
     last_state_A = state_A
     last_state_B = state_B
 
     # Output the current state (for debugging)
-    print(f"Direction: {direction}, Counter: {counter}")
+    
 
 # Attach interrupts to both channels
 GPIO.add_event_detect(PIN_A, GPIO.BOTH, callback=rotary_callback)
