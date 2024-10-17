@@ -13,6 +13,7 @@ if platform.system() == 'Linux':
    import RPi.GPIO as GPIO
 
    z_pulse = 0
+   z_flag = False
 
    GPIO.setmode(GPIO.BCM) 
    def enc(channel):
@@ -20,12 +21,13 @@ if platform.system() == 'Linux':
       pulse_count += 1
       
    def z_encoder_event(channel):
-      global z_pulse
-      if GPIO.input(Z_ENC1):
-         if GPIO.input(Z_ENC2):
-            z_pulse += 1
-         else:
-            z_pulse -= 1
+      global z_pulse,z_flag
+      z_flag = True
+      # if GPIO.input(Z_ENC1) and z_flag:
+      #    if GPIO.input(Z_ENC2):
+      #       z_pulse += 1
+      #    else:
+      #       z_pulse -= 1
       
 
    def btn_test(channel):
@@ -114,10 +116,16 @@ while running:
    if keys[pygame.K_SPACE]:
       if not pygame.mixer.get_busy():
          pygame.mixer.Sound.play(troepsound)
-   if z_pulse:
-      print(f'stepping: {z_pulse}')
-      actor.move_ver(z_pulse)
-      z_pulse = 0
+   if z_flag:
+      # GPIO.
+      if GPIO.input(Z_ENC2):
+         actor.move_ver(1)
+      else:
+         actor.move_ver(1)
+      z_flag = False
+      # print(f'stepping: {z_pulse}')
+      # actor.move_ver(z_pulse)
+      # z_pulse = 0
 
 
    group.update()
