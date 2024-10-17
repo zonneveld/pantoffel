@@ -120,8 +120,10 @@ while running:
       # GPIO.
       if GPIO.input(Z_ENC2):
          actor.move_ver(1)
+         print("up!")
       else:
-         actor.move_ver(1)
+         actor.move_ver(-1)
+         print("down")
       z_flag = False
       # print(f'stepping: {z_pulse}')
       # actor.move_ver(z_pulse)
