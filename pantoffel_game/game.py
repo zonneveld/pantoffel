@@ -2,11 +2,11 @@ import platform
 import pygame,sys
 import gameobjects
 
-Z_ENC1 = 14
-Z_ENC2 = 15
+Z_ENC1 = 23
+Z_ENC2 = 24
 
-X_ENC1 = 23
-X_ENC2 = 24
+X_ENC1 = 14
+X_ENC2 = 15
 
 Y_ENC1 = 2
 Y_ENC2 = 3
