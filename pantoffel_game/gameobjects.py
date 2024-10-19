@@ -37,6 +37,7 @@ class Actor(sprite.Sprite):
         self.float_ancor.y += value
 
     def float_step(self):
+        return
         r = Random()
         if r.randrange(0,10) == 1:
             self.float_offset.x += r.randrange(-4,5) * 1
@@ -46,14 +47,10 @@ class Actor(sprite.Sprite):
     def update(self) :
         
         self.angle += 1
-
-        # self.image = transform.rotozoom(self.base_image, self.angle,1)
-        # self.image = transform.box_blur(self.base_image,self.angle)
         self.float_step()
         postion = self.float_ancor + self.float_offset
         
         self.rect.x = postion.x
         self.rect.y = postion.y
-        # self.rect = self.image.get_rect(center=self.rect.center)
 
 

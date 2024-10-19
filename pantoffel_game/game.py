@@ -5,51 +5,46 @@ import gameobjects
 Z_ENC1 = 17
 Z_ENC2 = 27
 
-pulse_count = 0
+X_ENC1 = 17
+X_ENC2 = 27
+
+Y_ENC1 = 17
+Y_ENC2 = 27
+
+x_pulse = 0
+y_pulse = 0
+z_pulse = 0
+
 
 on_device = False
 
 if platform.system() == 'Linux':
-   import RPi.GPIO as GPIO
+   # import RPi.GPIO as GPIO #<-- vervangen met pizero!
+   from gpiozero import RotaryEncoder      
 
-   z_pulse = 0
-   z_flag = False
-
-   GPIO.setmode(GPIO.BCM) 
-   def enc(channel):
-      global pulse_count
-      pulse_count += 1
-      
-   def z_encoder_event(channel):
-      global z_pulse,z_flag
-      z_flag = True
-      # if GPIO.input(Z_ENC1) and z_flag:
-      #    if GPIO.input(Z_ENC2):
-      #       z_pulse += 1
-      #    else:
-      #       z_pulse -= 1
-      
-
-   def btn_test(channel):
-      print(f'edge on:{channel}')
+   def x_inc_ev(value):
+      global x_pulse
+      x_pulse+=1
 
    def system_start():
-      GPIO.setmode(GPIO.BCM)
-      GPIO.setup(Z_ENC1, GPIO.IN)
-      GPIO.setup(Z_ENC2, GPIO.IN)
+      global x_pulse
+      x_encoder = RotaryEncoder(X_ENC1,X_ENC2)
+      x_encoder.when_rotated_clockwise          = lambda : x_inc_ev(1)
+      x_encoder.when_rotated_counter_clockwise  = lambda : x_inc_ev(-1)
       
-      GPIO.add_event_detect(Z_ENC1,GPIO.RISING,z_encoder_event)
-      # GPIO.setup(pinData['test'],GPIO.IN,pull_up_down=GPIO.PUD_DOWN)
-      # GPIO.add_event_detect(pinData['test'], GPIO.RISING, callback=enc)
-      # GPIO.add_event_callback(pinData['test'],btn_test,GPIO.RISING)
+
+      y_encoder = RotaryEncoder(Y_ENC1,Y_ENC2)
       
-      # GPIO.add_event_callback(4,)
+      
+      z_encoder = RotaryEncoder(Z_ENC1,Z_ENC2)
+      
       pass
    def screen_setup():
       return pygame.display.set_mode((0, 0),pygame.FULLSCREEN )      
 
    def system_end():
-      GPIO.cleanup() 
+      pass
+      # GPIO.cleanup() 
 
 
 
@@ -116,17 +111,12 @@ while running:
    if keys[pygame.K_SPACE]:
       if not pygame.mixer.get_busy():
          pygame.mixer.Sound.play(troepsound)
-   if z_flag:
-      # GPIO.
-      if GPIO.input(Z_ENC2):
-         actor.move_ver(1)
-         print("up!")
-      else:
-         actor.move_ver(-1)
-         print("down")
-      z_flag = False
+   if x_pulse != 0:
+      actor.move_ver(x_pulse)
+      x_pulse = 0
+      
       # print(f'stepping: {z_pulse}')
-      # actor.move_ver(z_pulse)
+      # 
       # z_pulse = 0
 
 
