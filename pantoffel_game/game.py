@@ -105,6 +105,9 @@ while running:
    if x_pulse != 0:
       actor.move_ver(x_pulse)
       x_pulse = 0
+   if y_pulse != 0:
+      actor.move_ver(y_pulse)
+      y_pulse = 0
 
       # print(f'stepping: {z_pulse}')
       # 
