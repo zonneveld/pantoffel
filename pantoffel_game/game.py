@@ -2,14 +2,14 @@ import platform
 import pygame,sys
 import gameobjects
 
-Z_ENC1 = 23
-Z_ENC2 = 24
+Z_ENC1 = 2
+Z_ENC2 = 3
 
 X_ENC1 = 14
 X_ENC2 = 15
 
-Y_ENC1 = 2
-Y_ENC2 = 3
+Y_ENC1 = 23
+Y_ENC2 = 24
 
 x_pulse = 0
 y_pulse = 0
@@ -123,4 +123,3 @@ while running:
 
 pygame.quit()
 print("exit!")
-system_end()
