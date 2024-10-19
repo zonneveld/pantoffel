@@ -22,11 +22,30 @@ def x_inc_ev(value):
    x_pulse+=value
    print(f"x_pulse:{x_pulse}")
 
+def y_inc_ev(value):
+   global y_pulse
+   y_pulse+=value
+   print(f"x_pulse:{y_pulse}")
+
+def z_inc_ev(value):
+   global z_pulse
+   z_pulse+=value
+   print(f"x_pulse:{z_pulse}")
+
 #linux:
 from gpiozero import RotaryEncoder      
 x_encoder = RotaryEncoder(X_ENC1,X_ENC2)
 x_encoder.when_rotated_clockwise          = lambda : x_inc_ev(1)
 x_encoder.when_rotated_counter_clockwise  = lambda : x_inc_ev(-1)
+
+y_encoder = RotaryEncoder(Y_ENC1,Y_ENC2)
+y_encoder.when_rotated_clockwise          = lambda : y_inc_ev(1)
+y_encoder.when_rotated_counter_clockwise  = lambda : y_inc_ev(-1)
+
+z_encoder = RotaryEncoder(X_ENC1,X_ENC2)
+z_encoder.when_rotated_clockwise          = lambda : x_inc_ev(1)
+z_encoder.when_rotated_counter_clockwise  = lambda : x_inc_ev(-1)
+
 
 
 # elif platform.system() == 'Windows':
