@@ -2,14 +2,14 @@ import platform
 import pygame,sys
 import gameobjects
 
-Z_ENC1 = 17
-Z_ENC2 = 27
+Z_ENC1 = 14
+Z_ENC2 = 15
 
-X_ENC1 = 17
-X_ENC2 = 27
+X_ENC1 = 23
+X_ENC2 = 24
 
-Y_ENC1 = 17
-Y_ENC2 = 27
+Y_ENC1 = 2
+Y_ENC2 = 3
 
 x_pulse = 0
 y_pulse = 0
@@ -114,7 +114,7 @@ while running:
    if x_pulse != 0:
       actor.move_ver(x_pulse)
       x_pulse = 0
-      
+
       # print(f'stepping: {z_pulse}')
       # 
       # z_pulse = 0
