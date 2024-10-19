@@ -16,20 +16,22 @@ y_pulse = 0
 z_pulse = 0
 
 
+
 on_device = False
 
 if platform.system() == 'Linux':
    # import RPi.GPIO as GPIO #<-- vervangen met pizero!
    from gpiozero import RotaryEncoder      
-
+   x_encoder = RotaryEncoder(X_ENC1,X_ENC2)
+   
    def x_inc_ev(value):
       global x_pulse
       x_pulse+=value
       print(f"x_pulse:{x_pulse}")
 
    def system_start():
-      global x_pulse
-      x_encoder = RotaryEncoder(X_ENC1,X_ENC2)
+      global x_pulse,x_encoder
+
       x_encoder.when_rotated_clockwise          = lambda : x_inc_ev(1)
       x_encoder.when_rotated_counter_clockwise  = lambda : x_inc_ev(-1)
       
