@@ -24,7 +24,7 @@ if platform.system() == 'Linux':
 
    def x_inc_ev(value):
       global x_pulse
-      x_pulse+=1
+      x_pulse+=value
       print(f"x_pulse:{x_pulse}")
 
    def system_start():
