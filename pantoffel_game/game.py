@@ -25,12 +25,12 @@ def x_inc_ev(value):
 def y_inc_ev(value):
    global y_pulse
    y_pulse+=value
-   print(f"x_pulse:{y_pulse}")
+   print(f"y_pulse:{y_pulse}")
 
 def z_inc_ev(value):
    global z_pulse
    z_pulse+=value
-   print(f"x_pulse:{z_pulse}")
+   print(f"z_pulse:{z_pulse}")
 
 #linux:
 from gpiozero import RotaryEncoder      
@@ -42,9 +42,9 @@ y_encoder = RotaryEncoder(Y_ENC1,Y_ENC2)
 y_encoder.when_rotated_clockwise          = lambda : y_inc_ev(1)
 y_encoder.when_rotated_counter_clockwise  = lambda : y_inc_ev(-1)
 
-z_encoder = RotaryEncoder(X_ENC1,X_ENC2)
-z_encoder.when_rotated_clockwise          = lambda : x_inc_ev(1)
-z_encoder.when_rotated_counter_clockwise  = lambda : x_inc_ev(-1)
+z_encoder = RotaryEncoder(Z_ENC1,Z_ENC2)
+z_encoder.when_rotated_clockwise          = lambda : z_inc_ev(1)
+z_encoder.when_rotated_counter_clockwise  = lambda : z_inc_ev(-1)
 
 
 
