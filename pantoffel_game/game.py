@@ -11,11 +11,15 @@ X_ENC2 = 15
 Y_ENC1 = 23
 Y_ENC2 = 24
 
+LASER = 18
+
 # test..
 
 x_pulse = 0
 y_pulse = 0
 z_pulse = 0
+
+q_flag = False
 
 on_device = False
 
@@ -34,33 +38,47 @@ def z_inc_ev(value):
    z_pulse+=value
    print(f"z_pulse:{z_pulse}")
 
+def quit_ev():
+   global q_flag
+   q_flag = True
+
+def laser_event():
+   pass
+
+x_encoder = None
+y_encoder = None
+z_encoder = None
+
+laser_button = None
+
+screen = None
+
 #linux:
-from gpiozero import RotaryEncoder      
-x_encoder = RotaryEncoder(X_ENC1,X_ENC2)
-x_encoder.when_rotated_clockwise          = lambda : x_inc_ev(1)
-x_encoder.when_rotated_counter_clockwise  = lambda : x_inc_ev(-1)
+if platform.system() == 'Linux':
+   print("linux mode!")
+   from gpiozero import RotaryEncoder, Button     
+   x_encoder = RotaryEncoder(X_ENC1,X_ENC2)
+   x_encoder.when_rotated_clockwise          = lambda : x_inc_ev(1)
+   x_encoder.when_rotated_counter_clockwise  = lambda : x_inc_ev(-1)
 
-y_encoder = RotaryEncoder(Y_ENC1,Y_ENC2)
-y_encoder.when_rotated_clockwise          = lambda : y_inc_ev(1)
-y_encoder.when_rotated_counter_clockwise  = lambda : y_inc_ev(-1)
+   y_encoder = RotaryEncoder(Y_ENC1,Y_ENC2)
+   y_encoder.when_rotated_clockwise          = lambda : y_inc_ev(1)
+   y_encoder.when_rotated_counter_clockwise  = lambda : y_inc_ev(-1)
 
-z_encoder = RotaryEncoder(Z_ENC1,Z_ENC2)
-z_encoder.when_rotated_clockwise          = lambda : z_inc_ev(1)
-z_encoder.when_rotated_counter_clockwise  = lambda : z_inc_ev(-1)
+   z_encoder = RotaryEncoder(Z_ENC1,Z_ENC2)
+   z_encoder.when_rotated_clockwise          = lambda : z_inc_ev(1)
+   z_encoder.when_rotated_counter_clockwise  = lambda : z_inc_ev(-1)
 
+   laser_button = Button(LASER, pull_up = True, bounce_time = 0.5)
+   laser_button.when_pressed = quit_ev
 
-
-# elif platform.system() == 'Windows':
-#    def system_start():
-#       pass
-#    def system_end():
-#       pass
-#    def screen_setup():
-#       return pygame.display.set_mode([640, 640])
-
+   screen = pygame.display.set_mode((0, 0),pygame.FULLSCREEN )
+elif platform.system() == 'Windows':
+   print("windows mode!")
+   screen = pygame.display.set_mode((640, 820))
 
 pygame.init()
-screen = pygame.display.set_mode((0, 0),pygame.FULLSCREEN )
+# screen = pygame.display.set_mode((0, 0),pygame.FULLSCREEN )
 pygame.mouse.set_visible(False) 
 pygame.display.set_caption("Hello World")
 
@@ -81,13 +99,16 @@ group.add(actor2)
 running = True
 
 while running:
+   if q_flag:
+      running = False
+   
    for event in pygame.event.get():
       if event.type == pygame.QUIT:
          running = False
 
    keys = pygame.key.get_pressed()
    if keys[pygame.K_ESCAPE]:
-      running = False
+      quit_ev()
 
    if keys[pygame.K_LEFT]:
       for _actor in group.sprites():
