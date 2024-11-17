@@ -11,6 +11,8 @@ X_ENC2 = 15
 Y_ENC1 = 23
 Y_ENC2 = 24
 
+# test..
+
 x_pulse = 0
 y_pulse = 0
 z_pulse = 0
