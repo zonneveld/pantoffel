@@ -1,4 +1,5 @@
 import platform
+import math
 
 from pygame.surface import Surface
 from pygame.rect import Rect
@@ -22,6 +23,8 @@ SERVO = 24
 LASER = 18
 
 # test..
+ACTOR_EVENT = pygame.USEREVENT + 1
+
 
 x_pulse = 0
 y_pulse = 0
@@ -84,7 +87,7 @@ if platform.system() == 'Linux':
    laser_button = Button(LASER, pull_up = True, bounce_time = 0.5)
    laser_button.when_pressed = quit_ev
 
-   media = "media\\"
+   media = "media/"
    # lock_servo = Servo(SERVO,)
 
    screen = pygame.display.set_mode((0, 0),pygame.FULLSCREEN )
@@ -100,30 +103,60 @@ pygame.display.set_caption("Hello World")
 
 [w,h] = pygame.display.get_window_size()
 
-camera_offset_x = 0
-camera_offset_y = 0
 
-map_size = (2000,2000)
+
+
+
+map_width = 2000
+map_height = 2000
+
+viewing_border_width = 200
+viewing_border_height = 200
+
+map_size = (map_width,map_height)
 game_map = Surface(map_size)
+camera_area = game_map.get_rect().inflate(-viewing_border_width,-viewing_border_height)
+
+camera_offset_x = viewing_border_width
+camera_offset_y = viewing_border_height
+
 #  test bg
 bg =pygame.image.load(f"{media}grid.jpg")
 bg = pygame.transform.scale(bg,(map_size))
 # 
 
-
 clock = pygame.time.Clock()
+# level 1:
+def level1Content():
+   rtnGroup = Group()
+   arrow_img = pygame.image.load(f"{media}arrow.png")
+   ball_img = pygame.image.load(f"{media}ball.png")
+   # background objects:
+   rtnGroup.add(gameobjects.TravelingActor(ball_img, (map_width /2 , map_height / 2),30,1))
+   rtnGroup.add(gameobjects.Actor(arrow_img,(10,30)))
+   rtnGroup.add(gameobjects.Actor(arrow_img,(200,200)))
 
-actor=  gameobjects.Actor(f"{media}arrow.png",(10, 10))
-actor2=  gameobjects.Actor(f"{media}arrow.png",(w/2,h/2 + 50))
+   # forground obejects:
+   # nothing!
+   return rtnGroup
+
+# level 2:
+def level2Content():   
+   rtnGroup = Group()
+   return rtnGroup
+
+
+# actor=  gameobjects.Actor(f"{media}arrow.png",(10, 10))
+# actor2=  gameobjects.Actor(f"{media}arrow.png",(w/2,h/2 + 50))
 
 troepsound = pygame.mixer.Sound(f"{media}/troep.wav")
 
 
-group = Group()
-group.add(actor)
-group.add(actor2)
+
+group = level1Content()
 
 running = True
+lock = False
 
 while running:
    if q_flag:
@@ -132,49 +165,37 @@ while running:
    for event in pygame.event.get():
       if event.type == pygame.QUIT:
          running = False
+      elif event.type == ACTOR_EVENT:
+         lock = True
+         
 
    keys = pygame.key.get_pressed()
    if keys[pygame.K_ESCAPE]:
       quit_ev()
 
-   if keys[pygame.K_RIGHT] or x_pulse > 0:
-      x_pulse = 0
-      if game_map.get_rect().contains(Rect(camera_offset_x + 10, camera_offset_y,w,h)):
-         camera_offset_x += 10
-   if keys[pygame.K_LEFT] or x_pulse < 0:
-      x_pulse = 0
-      if game_map.get_rect().contains(Rect(camera_offset_x - 10, camera_offset_y,w,h)):
-         camera_offset_x -= 10
-   if keys[pygame.K_DOWN] or y_pulse > 0:
-      y_pulse = 0
-      if game_map.get_rect().contains(Rect(camera_offset_x, camera_offset_y + 10,w,h)):
-         camera_offset_y += 10
-   if keys[pygame.K_UP] or y_pulse < 0:
-      y_pulse = 0
-      if game_map.get_rect().contains(Rect(camera_offset_x, camera_offset_y -10,w,h)):
-         camera_offset_y -= 10
-
-   if keys[pygame.K_a]:
-      actor.move_hor(-1)
-   if keys[pygame.K_d]:
-      actor.move_hor(1)
-
-   if keys[pygame.K_SPACE]:
-      if not pygame.mixer.get_busy():
-         pygame.mixer.Sound.play(troepsound)
-   # if x_pulse != 0:
-   #    actor.move_ver(x_pulse)
-   #    x_pulse = 0
-   # if y_pulse != 0:
-   #    actor.move_hor(y_pulse)
-   #    y_pulse = 0
-
-      # print(f'stepping: {z_pulse}')
-      # 
-      # z_pulse = 0
+   if not lock:
+      if keys[pygame.K_RIGHT] or x_pulse > 0:
+         x_pulse = 0
+         if camera_area.contains(Rect(camera_offset_x + 10, camera_offset_y,w,h)):
+            camera_offset_x += 10
+      if keys[pygame.K_LEFT] or x_pulse < 0:
+         x_pulse = 0
+         if camera_area.contains(Rect(camera_offset_x - 10, camera_offset_y,w,h)):
+            camera_offset_x -= 10
+      if keys[pygame.K_DOWN] or y_pulse > 0:
+         y_pulse = 0
+         if camera_area.contains(Rect(camera_offset_x, camera_offset_y + 10,w,h)):
+            camera_offset_y += 10
+      if keys[pygame.K_UP] or y_pulse < 0:
+         y_pulse = 0
+         if camera_area.contains(Rect(camera_offset_x, camera_offset_y -10,w,h)):
+            camera_offset_y -= 10
 
    #update sprites 
    group.update() 
+   for actor in group.sprites():
+      actor.rect.x %= map_width
+      actor.rect.y %= map_height
 
    game_map.fill((0,0,0))
    game_map.blit(bg,(0,0))
@@ -183,9 +204,9 @@ while running:
    group.draw(game_map)
    camera = game_map.subsurface(Rect(camera_offset_x,camera_offset_y,w,h))
 
-   screen.blit(camera)
+   screen.blit(camera,(0,0))
    pygame.display.flip()
-   clock.tick(30)
+   clock.tick(60)
 
 pygame.quit()
 print("exit!")
