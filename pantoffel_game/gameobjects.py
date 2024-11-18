@@ -13,8 +13,17 @@ class Coordinate:
 
     def get(self):
         return (self.x,self.y)
-
     # def 
+
+# class Actor(sprite.Sprite):
+#     def __init__(self,mask,position):
+#         super(Actor,self).__init__()
+#         self.mask = mask
+#         (x,y) = position
+#         self.position = Coordinate(x,y)
+        
+#     def 
+    # pass
 
 class Actor(sprite.Sprite):
     def __init__(self,imgpath,pos):
