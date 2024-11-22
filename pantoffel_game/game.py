@@ -19,11 +19,19 @@ Y_ENC1 = 22
 Y_ENC2 = 23
 
 SERVO = 24
+SERVO_ANGLE_MIN = -90
+SERVO_ANGLE_MAX = 90
+
+SERVO_LOCK_ANGLE     = SERVO_ANGLE_MAX
+SERVO_UNLOCK_ANGLE   = SERVO_ANGLE_MIN
 
 LASER = 18
 
+ESCAPE = 20
+
 # test..
-ACTOR_EVENT = pygame.USEREVENT + 1
+ACTOR_EVENT       = pygame.USEREVENT + 1
+TIMER_LOCK_EVENT  = pygame.USEREVENT + 1
 
 
 x_pulse = 0
@@ -31,6 +39,9 @@ y_pulse = 0
 z_pulse = 0
 
 q_flag = False
+unlock_flag = False
+
+
 
 on_device = False
 
@@ -54,13 +65,20 @@ def quit_ev():
    q_flag = True
 
 def laser_event():
-   pass
+   global lock_servo,unlock_flag
+   unlock_flag = True
+   lock_servo.angle = SERVO_UNLOCK_ANGLE
+
+def lock_event():
+   global lock_servo
+   lock_servo.angle = SERVO_LOCK_ANGLE
 
 x_encoder = None
 y_encoder = None
 z_encoder = None
 
 laser_button = None
+escape_button = None
 
 screen = None
 
@@ -71,7 +89,7 @@ media = "media/"
 #linux:
 if platform.system() == 'Linux':
    print("linux mode!")
-   from gpiozero import RotaryEncoder, Button, Servo    
+   from gpiozero import RotaryEncoder, Button, AngularServo  
    x_encoder = RotaryEncoder(X_ENC1,X_ENC2)
    x_encoder.when_rotated_clockwise          = lambda : x_inc_ev(1)
    x_encoder.when_rotated_counter_clockwise  = lambda : x_inc_ev(-1)
@@ -85,8 +103,14 @@ if platform.system() == 'Linux':
    z_encoder.when_rotated_counter_clockwise  = lambda : z_inc_ev(-1)
 
    laser_button = Button(LASER, pull_up = True, bounce_time = 0.5)
-   laser_button.when_pressed = quit_ev
+   laser_button.when_pressed = laser_event
+ 
+   escape_button = Button(ESCAPE, pull_up = True, bounce_time = 0.3)
+   escape_button.when_pressed = quit_ev 
 
+   lock_servo = AngularServo(SERVO, min_angle=SERVO_ANGLE_MIN, max_angle=SERVO_ANGLE_MAX)
+   lock_servo.angle = SERVO_LOCK_ANGLE
+   
    media = "media/"
    # lock_servo = Servo(SERVO,)
 
@@ -162,11 +186,18 @@ while running:
    if q_flag:
       running = False
    
+   if unlock_flag:
+      unlock_flag = False
+      pygame.time.set_timer(TIMER_LOCK_EVENT,1000,1)
+      # lock_event()
+
    for event in pygame.event.get():
       if event.type == pygame.QUIT:
          running = False
       elif event.type == ACTOR_EVENT:
          lock = True
+      elif event.type == TIMER_LOCK_EVENT:
+         lock_event()
          
 
    keys = pygame.key.get_pressed()
