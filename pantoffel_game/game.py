@@ -81,6 +81,7 @@ def z_inc_ev(value):
       print(f"z_pulse:{z_pulse}")
 
 def shoot_laser_ev(value):
+   global laser_enabled
    if laser_enabled:
       pygame.event.post(Event(LASER_SHOT))
       laser_enabled = False
@@ -248,14 +249,18 @@ holding = False # <-  playing exit event
 releasing = False
 laser_enabled = False
 game_done = False
-
+anger_effect = False
 
 current_actor = None
 
 yes_color = (0,255,0)
 no_color = (255,0,0)
 
-croshair = Rect()
+alpha_screen = Surface(pygame.display.get_window_size())
+alpha_screen.fill((255,0,0))
+alpha_screen.set_alpha(0)
+
+croshair = None
 
 flash_counter = 0
 scale_counter = 0
@@ -290,6 +295,7 @@ while running:
       
       elif event.type == START_LASER_EVENT:
          print("laser event start")
+         pausing = True
          pygame.time.set_timer(TIMER_FLASH_EVENT,100)
          laser_enabled = True
 
@@ -311,23 +317,11 @@ while running:
       elif event.type == LASER_SHOT:
          print("laser event shot")
          current_actor.grow = True
+         anger_effect = True
 
       elif event.type == END_LASER_EVENT:
          print("end laser event")
          pygame.event.post(Event(UNLOCK_EVENT))
-         # pygame.time.set_timer(SCALE_LASER_TIMER,100)
-      
-
-      # elif event.type == SCALE_LASER_TIMER:
-      #    scale_counter += 1
-      #    current_actor.scale(1+ (1/30 *scale_counter))
-      #    print(f"scale step = {scale_counter}")
-      #    if scale_counter > 30:
-      #       pygame.time.set_timer(SCALE_LASER_TIMER,0)
-      #       pygame.time.set_timer(TIMER_FLASH_EVENT,0)
-      #       print("done scaling!")
-      #       pygame.event.post(Event(UNLOCK_EVENT))
-      #       game_done = True
       
       elif event.type == UNLOCK_EVENT:
          # unlock it and...
@@ -409,6 +403,8 @@ while running:
             if isinstance(actor,gameobjects.LaserExitActor):
                current_actor = actor
                current_actor.start_event()
+               # if alpha_screen.get_alpha()
+               # alpha_screen.set_alpha(alpha_screen.get_alpha() + 1)
 
             elif isinstance(actor,gameobjects.EventfulActor):
                current_actor = actor
@@ -418,7 +414,16 @@ while running:
 
       pygame.draw.rect(game_map,yes_color if any_check else no_color,croshair_area,3)
       camera =  pygame.transform.box_blur(game_map.subsurface(camera_area),z_pulse + 1,repeat_edge_pixels=False)  
+      
+      # alpha_screen.blit(camera,(0,0))
+      # camera.blit(alpha_screen,(0,0))
+      if anger_effect:
+         alpha_screen.set_alpha(alpha_screen.get_alpha() + 1)
+      
       screen.blit(camera,(0,0))
+      screen.blit(alpha_screen,(0,0))
+      
+      
    else:
       screen.blit(game_map,(0,0))
    pygame.display.flip()

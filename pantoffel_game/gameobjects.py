@@ -107,7 +107,7 @@ class LaserExitActor(ExitActor):
     def update(self):
         if self.grow:
             if self.growstep > 100:
-                event.post(Event())
+                event.post(Event(END_LASER_EVENT))
                 self.grow = False
             self.growstep+= 1
             or_x,or_y = self.mask.get_size()
