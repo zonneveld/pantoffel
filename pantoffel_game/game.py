@@ -29,17 +29,21 @@ SERVO_UNLOCK_ANGLE   = SERVO_ANGLE_MIN
 
 LASER = 18
 
-LASER_WARNING_LIGHT = 20
+LASER_WARNING_LIGHT = 27
 WARNING_LIGHT_A = 20
 WARNING_LIGHT_B = 13
 
-ESCAPE = 20
+# ESCAPE = /
 
 BLUR_MAX = 100
 
 # test..
 
+LASER_SEQUENCE = pygame.USEREVENT+ 12
+
+TIMER_FLASH_EVENT =pygame.USEREVENT + 11
 TIMER_LOCK_EVENT  = pygame.USEREVENT + 10
+
 
 
 x_pulse = 0
@@ -126,12 +130,14 @@ if platform.system() == 'Linux':
    laser_warning_a = LED(WARNING_LIGHT_A)
    laser_warning_b = LED(WARNING_LIGHT_B)
  
-   escape_button = Button(ESCAPE, pull_up = True, bounce_time = 0.3)
-   escape_button.when_pressed                = quit_ev 
+   # escape_button = Button(ESCAPE, pull_up = True, bounce_time = 0.3)
+   # escape_button.when_pressed                = quit_ev 
 
    lock_servo = AngularServo(SERVO, min_angle=SERVO_ANGLE_MIN, max_angle=SERVO_ANGLE_MAX)
    lock_servo.angle = SERVO_LOCK_ANGLE
    
+   pygame.event.post(Event(LASER_SEQUENCE))
+
    media = "media/"
    # lock_servo = Servo(SERVO,)
 
@@ -179,9 +185,9 @@ def level1Content():
 
    #images:
    arrow_img =       pygame.image.load(f"{media}arrow.png").convert_alpha()
-   ball_img =        pygame.image.load(f"{media}ball.png").convert_alpha()
+   ball_img =        pygame.image.load(f"{media}cartman.svg").convert_alpha()
    star_img =        pygame.image.load(f"{media}star.png").convert_alpha()
-   triangle_img =    pygame.image.load(f"{media}triangle.png").convert_alpha()
+   triangle_img =    pygame.image.load(f"{media}cartman.svg").convert_alpha()
 
    #sound
    troep = pygame.mixer.Sound(f"{media}troep.wav")
@@ -205,7 +211,7 @@ def level1Content():
 def level2Content():   
    rtnLevelContent = LevelContent("grid_2.jpg",map_size)
    arrow_img = pygame.image.load(f"{media}arrow.png")
-   ball_img = pygame.image.load(f"{media}ball.png")
+   ball_img = pygame.image.load(f"{media}cartman.svg")
    triangle_img = pygame.image.load(f"{media}triangle.png")
    star_img = pygame.image.load(f"{media}star.png")
 
@@ -231,17 +237,21 @@ releasing = False
 
 current_actor = None
 
-# crosshairstuff
+
 yes_color = (0,255,0)
 no_color = (255,0,0)
 
 croshair = Rect()
+
+flash_counter = 0
+
 
 
 while running:
    if q_flag:
       running = False
    
+
    if unlock_flag:
       unlock_flag = False
       pygame.time.set_timer(TIMER_LOCK_EVENT,1000,1)
@@ -259,16 +269,34 @@ while running:
       elif event.type == EXIT_EVENT_START:
          holding = True
          z_pulse = 0
-         # print("goto next level")
       elif event.type == EXIT_EVENT_END:
          holding = False
          releasing = True
          content = level2Content()
-         # print("entering new level")
-
       elif event.type == TIMER_LOCK_EVENT:
          lock_event()
+      
+      elif event.type == LASER_SEQUENCE:
+          pygame.time.set_timer(TIMER_FLASH_EVENT,50)
+
+      elif event.type == TIMER_FLASH_EVENT:
+         flash_counter %= 20
+         if (flash_counter % 10) == 0:
+            laser_warning_a.on()
+            laser_light.toggle()
+         else:
+            laser_warning_a.off()
          
+         if (flash_counter % 20) == 0:
+            laser_warning_a.on()
+            laser_light.toggle()
+         else:
+            laser_warning_a.off()
+         
+         flash_counter+=1
+
+
+
 
    keys = pygame.key.get_pressed()
    if keys[pygame.K_ESCAPE]:
@@ -277,7 +305,7 @@ while running:
    if holding:
       if keys[pygame.K_z]:
          z_pulse += 1
-         print(z_pulse)
+         # print(z_pulse)
       if z_pulse > BLUR_MAX:
          z_pulse = BLUR_MAX
          pygame.event.post(Event(EXIT_EVENT_END))
@@ -285,7 +313,7 @@ while running:
    elif releasing:
       if keys[pygame.K_z]:
          z_pulse -= 1
-         print(z_pulse)
+         # print(z_pulse)
       if z_pulse < 1:
          z_pulse = 1
          releasing = False
