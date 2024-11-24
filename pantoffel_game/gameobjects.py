@@ -92,10 +92,11 @@ class LaserExitActor(ExitActor):
         if self.event_done:
             return
         self.event_done = True
+        self.channel.play(self.soundbite)
         event.post(Event(START_LASER_EVENT))
 
 
-    def scale(self):
-        center = self.rect.center
-        self.image = transform.scale_by(self.image,1.5) 
-        self.rect.center = center
+    def scale(self,size):
+        center = self.image.get_rect().center
+        self.image = transform.scale_by(self.mask,size) 
+        self.rect = self.image.get_rect(center=center)

@@ -311,7 +311,7 @@ while running:
       
       elif event.type == SCALE_LASER_TIMER:
          scale_counter += 1
-         current_actor.scale()
+         current_actor.scale(1+ (1/30 *scale_counter))
          print(f"scale step = {scale_counter}")
          if scale_counter > 30:
             pygame.time.set_timer(SCALE_LASER_TIMER,0)
