@@ -1,22 +1,14 @@
 import math
 
-from pygame import sprite,image,transform
+from pygame import USEREVENT
+from pygame import sprite,mixer,event
 from random import Random
 
+ACTOR_EVENT_START       = USEREVENT + 1
+ACTOR_EVENT_END         = USEREVENT + 2
+EXIT_EVENT_START        = USEREVENT + 3
+EXIT_EVENT_END          = USEREVENT + 4
 
-# class Coordinate:
-#     def __init__(self,pos = (0,0)):
-#         (self.x,self.y) = pos
-    
-#     def __add__(self, pos_to_add):
-#         return Coordinate((self.x + pos_to_add.x, self.y + pos_to_add.y))
-    
-#     def __eq__(self,pos_to_check) -> bool:
-#         return (self.x == pos_to_check.x) and (self.y == pos_to_check.y)
-
-#     def get(self):
-#         return (self.x,self.y)
-#     # def 
 
 class Actor(sprite.Sprite):
     def __init__(self,mask,position):
@@ -72,10 +64,28 @@ class EventfulActor(Actor):
     def __init__(self, mask, position,soundbite):
         super().__init__(mask, position)
         self.soundbite = soundbite
+        self.event_done = False
+        self.channel = mixer.Channel(0)
     
-    def event(self):
-        pass
 
+    def start_event(self):
+        if self.event_done or self.channel.get_busy():
+            return
+        
+        event.post(event.Event(ACTOR_EVENT_START))
+        self.channel.set_endevent(ACTOR_EVENT_END)
+        self.channel.play(self.soundbite)
+        self.event_done = True
+
+class ExitActor(EventfulActor):
+    def __init__(self, mask, position, soundbite):
+        super().__init__(mask, position, soundbite)
+    
+    def start_event(self):
+        super().start_event()
+
+
+        
 # class Actor(sprite.Sprite):
 #     def __init__(self,imgpath,pos):
 #         super(Actor,self).__init__()

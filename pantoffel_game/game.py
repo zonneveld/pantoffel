@@ -1,12 +1,14 @@
 import platform
-import math
+
 
 from pygame.surface import Surface
 from pygame.rect import Rect
-from pygame.sprite import Sprite, Group
+from pygame.sprite import Group
+from pygame.event import Event
 
+import pygame
 
-import pygame,sys
+from gameobjects import ACTOR_EVENT_START,ACTOR_EVENT_END,EXIT_EVENT_END,EXIT_EVENT_START
 import gameobjects
 
 Z_ENC1 = 9
@@ -27,11 +29,17 @@ SERVO_UNLOCK_ANGLE   = SERVO_ANGLE_MIN
 
 LASER = 18
 
+LASER_WARNING_LIGHT = 20
+WARNING_LIGHT_A = 20
+WARNING_LIGHT_B = 13
+
 ESCAPE = 20
 
+BLUR_MAX = 100
+
 # test..
-ACTOR_EVENT       = pygame.USEREVENT + 1
-TIMER_LOCK_EVENT  = pygame.USEREVENT + 1
+
+TIMER_LOCK_EVENT  = pygame.USEREVENT + 10
 
 
 x_pulse = 0
@@ -57,8 +65,9 @@ def y_inc_ev(value):
 
 def z_inc_ev(value):
    global z_pulse
-   z_pulse+=value
-   print(f"z_pulse:{z_pulse}")
+   if holding:
+      z_pulse+=value
+      print(f"z_pulse:{z_pulse}")
 
 def quit_ev():
    global q_flag
@@ -78,6 +87,10 @@ y_encoder = None
 z_encoder = None
 
 laser_button = None
+laser_light = None
+laser_warning_a = None
+laser_warning_b = None
+
 escape_button = None
 
 screen = None
@@ -86,10 +99,12 @@ lock_servo = None
 
 media = "media/"
 
+
+
 #linux:
 if platform.system() == 'Linux':
    print("linux mode!")
-   from gpiozero import RotaryEncoder, Button, AngularServo  
+   from gpiozero import RotaryEncoder, Button, AngularServo, LED
    x_encoder = RotaryEncoder(X_ENC1,X_ENC2)
    x_encoder.when_rotated_clockwise          = lambda : x_inc_ev(1)
    x_encoder.when_rotated_counter_clockwise  = lambda : x_inc_ev(-1)
@@ -102,11 +117,17 @@ if platform.system() == 'Linux':
    z_encoder.when_rotated_clockwise          = lambda : z_inc_ev(1)
    z_encoder.when_rotated_counter_clockwise  = lambda : z_inc_ev(-1)
 
-   laser_button = Button(LASER, pull_up = True, bounce_time = 0.5)
-   laser_button.when_pressed = laser_event
+   laser_button = Button(LASER, pull_up = True, bounce_time = 0.3)
+   laser_button.when_pressed                 = laser_event
+
+   laser_light = LED(LASER_WARNING_LIGHT)
+   laser_light.on() #<-- pull up high side
+
+   laser_warning_a = LED(WARNING_LIGHT_A)
+   laser_warning_b = LED(WARNING_LIGHT_B)
  
    escape_button = Button(ESCAPE, pull_up = True, bounce_time = 0.3)
-   escape_button.when_pressed = quit_ev 
+   escape_button.when_pressed                = quit_ev 
 
    lock_servo = AngularServo(SERVO, min_angle=SERVO_ANGLE_MIN, max_angle=SERVO_ANGLE_MAX)
    lock_servo.angle = SERVO_LOCK_ANGLE
@@ -127,10 +148,6 @@ pygame.display.set_caption("Hello World")
 
 [w,h] = pygame.display.get_window_size()
 
-
-
-
-
 map_width = 2000
 map_height = 2000
 
@@ -139,48 +156,87 @@ viewing_border_height = 200
 
 map_size = (map_width,map_height)
 game_map = Surface(map_size)
-camera_area = game_map.get_rect().inflate(-viewing_border_width,-viewing_border_height)
+viewing_area = game_map.get_rect().inflate(-viewing_border_width,-viewing_border_height)
 
 camera_offset_x = viewing_border_width
 camera_offset_y = viewing_border_height
 
-#  test bg
-bg =pygame.image.load(f"{media}grid.jpg")
-bg = pygame.transform.scale(bg,(map_size))
-# 
+background_img = None
 
 clock = pygame.time.Clock()
+
+class LevelContent():
+   def __init__(self,background_img_uri,size) -> None:
+      self.background_img = pygame.image.load(f"{media}{background_img_uri}").convert_alpha()
+      self.background_img = pygame.transform.scale(self.background_img,(size))
+      
+      self.group = Group()
+      self.exit = None
+
 # level 1:
 def level1Content():
-   rtnGroup = Group()
-   arrow_img = pygame.image.load(f"{media}arrow.png")
-   ball_img = pygame.image.load(f"{media}ball.png")
-   # background objects:
-   rtnGroup.add(gameobjects.TravelingActor(ball_img, (map_width /2 , map_height / 2),30,1))
-   rtnGroup.add(gameobjects.Actor(arrow_img,(10,30)))
-   rtnGroup.add(gameobjects.Actor(arrow_img,(200,200)))
+   rtnLevelContent = LevelContent("grid.jpg",map_size)
 
-   # forground obejects:
-   # nothing!
-   return rtnGroup
+   #images:
+   arrow_img =       pygame.image.load(f"{media}arrow.png").convert_alpha()
+   ball_img =        pygame.image.load(f"{media}ball.png").convert_alpha()
+   star_img =        pygame.image.load(f"{media}star.png").convert_alpha()
+   triangle_img =    pygame.image.load(f"{media}triangle.png").convert_alpha()
+
+   #sound
+   troep = pygame.mixer.Sound(f"{media}troep.wav")
+
+   # background objects:
+   rtnLevelContent.group.add(gameobjects.TravelingActor(ball_img, (map_width /2 , map_height / 2),30,1))
+   rtnLevelContent.group.add(gameobjects.Actor(arrow_img,(200,200)))
+   rtnLevelContent.group.add(gameobjects.Actor(arrow_img,(300,300)))
+
+   # actors:
+   rtnLevelContent.group.add(gameobjects.EventfulActor(star_img,(400,1500),troep))
+   rtnLevelContent.group.add(gameobjects.EventfulActor(star_img,(800,800),troep))
+
+   # exit actor
+   rtnLevelContent.exit = gameobjects.ExitActor(triangle_img,(map_width /2 , map_height / 2),troep)
+   
+
+   return rtnLevelContent
 
 # level 2:
 def level2Content():   
-   rtnGroup = Group()
-   return rtnGroup
+   rtnLevelContent = LevelContent("grid_2.jpg",map_size)
+   arrow_img = pygame.image.load(f"{media}arrow.png")
+   ball_img = pygame.image.load(f"{media}ball.png")
+   triangle_img = pygame.image.load(f"{media}triangle.png")
+   star_img = pygame.image.load(f"{media}star.png")
 
+   troep = pygame.mixer.Sound(f"{media}troep.wav")
+   
+   rtnLevelContent.group.add(gameobjects.TravelingActor(ball_img, (300 , 300),60,5))
+   rtnLevelContent.group.add(gameobjects.Actor(arrow_img,(200,200)))
+   rtnLevelContent.group.add(gameobjects.Actor(arrow_img,(300,300)))
 
-# actor=  gameobjects.Actor(f"{media}arrow.png",(10, 10))
-# actor2=  gameobjects.Actor(f"{media}arrow.png",(w/2,h/2 + 50))
+   rtnLevelContent.group.add(gameobjects.EventfulActor(star_img,(400,1500),troep))
+
+   rtnLevelContent.exit = gameobjects.ExitActor(triangle_img,(map_width /2 , map_height / 2),troep)
+   return rtnLevelContent
 
 troepsound = pygame.mixer.Sound(f"{media}/troep.wav")
 
-
-
-group = level1Content()
+content = level1Content()
 
 running = True
-lock = False
+pausing = False # <-- playing any event
+holding = False # <-  playing exit event
+releasing = False
+
+current_actor = None
+
+# crosshairstuff
+yes_color = (0,255,0)
+no_color = (255,0,0)
+
+croshair = Rect()
+
 
 while running:
    if q_flag:
@@ -189,13 +245,27 @@ while running:
    if unlock_flag:
       unlock_flag = False
       pygame.time.set_timer(TIMER_LOCK_EVENT,1000,1)
-      # lock_event()
 
    for event in pygame.event.get():
       if event.type == pygame.QUIT:
          running = False
-      elif event.type == ACTOR_EVENT:
-         lock = True
+      elif event.type == ACTOR_EVENT_START:
+         pausing = True
+      elif event.type == ACTOR_EVENT_END:
+         pausing = False
+         current_actor.event_done = True
+         if isinstance(current_actor,gameobjects.ExitActor):
+            pygame.event.post(Event(EXIT_EVENT_START))
+      elif event.type == EXIT_EVENT_START:
+         holding = True
+         z_pulse = 0
+         # print("goto next level")
+      elif event.type == EXIT_EVENT_END:
+         holding = False
+         releasing = True
+         content = level2Content()
+         # print("entering new level")
+
       elif event.type == TIMER_LOCK_EVENT:
          lock_event()
          
@@ -204,37 +274,74 @@ while running:
    if keys[pygame.K_ESCAPE]:
       quit_ev()
 
-   if not lock:
+   if holding:
+      if keys[pygame.K_z]:
+         z_pulse += 1
+         print(z_pulse)
+      if z_pulse > BLUR_MAX:
+         z_pulse = BLUR_MAX
+         pygame.event.post(Event(EXIT_EVENT_END))
+
+   elif releasing:
+      if keys[pygame.K_z]:
+         z_pulse -= 1
+         print(z_pulse)
+      if z_pulse < 1:
+         z_pulse = 1
+         releasing = False
+
+   elif not pausing:
       if keys[pygame.K_RIGHT] or x_pulse > 0:
          x_pulse = 0
-         if camera_area.contains(Rect(camera_offset_x + 10, camera_offset_y,w,h)):
+         if viewing_area.contains(Rect(camera_offset_x + 10, camera_offset_y,w,h)):
             camera_offset_x += 10
       if keys[pygame.K_LEFT] or x_pulse < 0:
          x_pulse = 0
-         if camera_area.contains(Rect(camera_offset_x - 10, camera_offset_y,w,h)):
+         if viewing_area.contains(Rect(camera_offset_x - 10, camera_offset_y,w,h)):
             camera_offset_x -= 10
       if keys[pygame.K_DOWN] or y_pulse > 0:
          y_pulse = 0
-         if camera_area.contains(Rect(camera_offset_x, camera_offset_y + 10,w,h)):
+         if viewing_area.contains(Rect(camera_offset_x, camera_offset_y + 10,w,h)):
             camera_offset_y += 10
       if keys[pygame.K_UP] or y_pulse < 0:
          y_pulse = 0
-         if camera_area.contains(Rect(camera_offset_x, camera_offset_y -10,w,h)):
+         if viewing_area.contains(Rect(camera_offset_x, camera_offset_y -10,w,h)):
             camera_offset_y -= 10
+         
 
-   #update sprites 
+   all_events_done = all([e.event_done for e in content.group.sprites() if isinstance(e,gameobjects.EventfulActor)])
+   if all_events_done and not any(isinstance(actor, gameobjects.ExitActor) for actor in content.group.sprites()):
+      content.group.add(content.exit)
+      print("added exit!")
+
+   group = content.group
+
    group.update() 
    for actor in group.sprites():
       actor.rect.x %= map_width
       actor.rect.y %= map_height
 
+   #set background
    game_map.fill((0,0,0))
-   game_map.blit(bg,(0,0))
-   # camera = pygame.surface()
+   game_map.blit(content.background_img,(0,0))
 
    group.draw(game_map)
-   camera = game_map.subsurface(Rect(camera_offset_x,camera_offset_y,w,h))
+   camera_area =Rect(camera_offset_x,camera_offset_y,w,h)
+   croshair_area = Rect(200,200,400,400)
+   croshair_area.center = camera_area.center
+   any_check = False
+   
+   for actor in group.sprites():
+      if croshair_area.contains(actor.rect):
+         any_check = True
+         if isinstance(actor,gameobjects.EventfulActor):
+            current_actor = actor
+            current_actor.start_event()
 
+   pygame.draw.rect(game_map,yes_color if any_check else no_color,croshair_area,3)
+   camera =  pygame.transform.box_blur(game_map.subsurface(camera_area),z_pulse + 1,repeat_edge_pixels=False)  
+   # effect_camera = camera.copy()
+   # camera = pygame.transform.box_blur(camera,z_pulse + 1,repeat_edge_pixels=False)
    screen.blit(camera,(0,0))
    pygame.display.flip()
    clock.tick(60)
