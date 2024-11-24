@@ -1,5 +1,6 @@
 import math
 
+from pygame.event import Event
 from pygame import USEREVENT
 from pygame import sprite,mixer,event,transform
 from random import Random
@@ -8,6 +9,8 @@ ACTOR_EVENT_START       = USEREVENT + 1
 ACTOR_EVENT_END         = USEREVENT + 2
 EXIT_EVENT_START        = USEREVENT + 3
 EXIT_EVENT_END          = USEREVENT + 4
+
+START_LASER_EVENT       = USEREVENT + 5
 
 
 class Actor(sprite.Sprite):
@@ -85,6 +88,13 @@ class ExitActor(EventfulActor):
         super().start_event()
 
 class LaserExitActor(ExitActor):
+    def start_event(self):
+        if self.event_done:
+            return
+        self.event_done = True
+        event.post(Event(START_LASER_EVENT))
+
+
     def scale(self):
         center = self.rect.center
         self.image = transform.scale_by(self.image,1.5) 

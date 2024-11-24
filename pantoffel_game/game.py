@@ -8,7 +8,7 @@ from pygame.event import Event
 
 import pygame
 
-from gameobjects import ACTOR_EVENT_START,ACTOR_EVENT_END,EXIT_EVENT_END,EXIT_EVENT_START
+from gameobjects import ACTOR_EVENT_START,ACTOR_EVENT_END,EXIT_EVENT_END,EXIT_EVENT_START,START_LASER_EVENT
 import gameobjects
 
 Z_ENC1 = 9
@@ -45,7 +45,7 @@ TIMER_FLASH_EVENT =pygame.USEREVENT + 11
 UNLOCK_EVENT      = pygame.USEREVENT + 13
 TIMER_LOCK_EVENT  = pygame.USEREVENT + 10
 
-START_LASER_EVENT = pygame.USEREVENT + 14
+
 LASER_SHOT        = pygame.USEREVENT + 15
 
 SCALE_LASER_TIMER = pygame.USEREVENT + 16
@@ -397,7 +397,7 @@ while running:
          if isinstance(actor,gameobjects.LaserExitActor):
             current_actor = actor
             current_actor.start_event()
-            pygame.event.post(Event(START_LASER_EVENT))
+            
          
          elif isinstance(actor,gameobjects.EventfulActor):
             current_actor = actor
