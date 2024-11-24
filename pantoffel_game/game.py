@@ -8,7 +8,7 @@ from pygame.event import Event
 
 import pygame
 
-from gameobjects import ACTOR_EVENT_START,ACTOR_EVENT_END,EXIT_EVENT_END,EXIT_EVENT_START,START_LASER_EVENT
+from gameobjects import ACTOR_EVENT_START,ACTOR_EVENT_END,EXIT_EVENT_END,EXIT_EVENT_START,START_LASER_EVENT,END_LASER_EVENT
 import gameobjects
 
 Z_ENC1 = 9
@@ -48,7 +48,7 @@ TIMER_LOCK_EVENT  = pygame.USEREVENT + 10
 
 LASER_SHOT        = pygame.USEREVENT + 15
 
-SCALE_LASER_TIMER = pygame.USEREVENT + 16
+
 
 x_pulse = 0
 y_pulse = 0
@@ -83,6 +83,7 @@ def z_inc_ev(value):
 def shoot_laser_ev(value):
    if laser_enabled:
       pygame.event.post(Event(LASER_SHOT))
+      laser_enabled = False
 
 def quit_ev():
    global q_flag
@@ -246,6 +247,8 @@ pausing = False # <-- playing any event
 holding = False # <-  playing exit event
 releasing = False
 laser_enabled = False
+game_done = False
+
 
 current_actor = None
 
@@ -307,17 +310,24 @@ while running:
 
       elif event.type == LASER_SHOT:
          print("laser event shot")
-         pygame.time.set_timer(SCALE_LASER_TIMER,100)
+         current_actor.grow = True
+
+      elif event.type == END_LASER_EVENT:
+         print("end laser event")
+         pygame.event.post(Event(UNLOCK_EVENT))
+         # pygame.time.set_timer(SCALE_LASER_TIMER,100)
       
-      elif event.type == SCALE_LASER_TIMER:
-         scale_counter += 1
-         current_actor.scale(1+ (1/30 *scale_counter))
-         print(f"scale step = {scale_counter}")
-         if scale_counter > 30:
-            pygame.time.set_timer(SCALE_LASER_TIMER,0)
-            pygame.time.set_timer(TIMER_FLASH_EVENT,0)
-            print("done scaling!")
-            pygame.event.post(UNLOCK_EVENT)
+
+      # elif event.type == SCALE_LASER_TIMER:
+      #    scale_counter += 1
+      #    current_actor.scale(1+ (1/30 *scale_counter))
+      #    print(f"scale step = {scale_counter}")
+      #    if scale_counter > 30:
+      #       pygame.time.set_timer(SCALE_LASER_TIMER,0)
+      #       pygame.time.set_timer(TIMER_FLASH_EVENT,0)
+      #       print("done scaling!")
+      #       pygame.event.post(Event(UNLOCK_EVENT))
+      #       game_done = True
       
       elif event.type == UNLOCK_EVENT:
          # unlock it and...
@@ -366,7 +376,8 @@ while running:
          y_pulse = 0
          if viewing_area.contains(Rect(camera_offset_x, camera_offset_y -10,w,h)):
             camera_offset_y -= 10
-         
+      if keys[pygame.K_p]:
+         game_done = True
 
    all_events_done = all([e.event_done for e in content.group.sprites() if isinstance(e,gameobjects.EventfulActor)])
    if all_events_done and not any(isinstance(actor, gameobjects.ExitActor) for actor in content.group.sprites()):
@@ -382,33 +393,34 @@ while running:
 
    #set background
    game_map.fill((0,0,0))
-   game_map.blit(content.background_img,(0,0))
-
-   group.draw(game_map)
-   camera_area =Rect(camera_offset_x,camera_offset_y,w,h)
-   croshair_area = Rect(200,200,400,400)
-   croshair_area.center = camera_area.center
-   any_check = False
    
-   for actor in group.sprites():
-      if croshair_area.contains(actor.rect):
-         any_check = True
-         
-         if isinstance(actor,gameobjects.LaserExitActor):
-            current_actor = actor
-            current_actor.start_event()
-            
-         
-         elif isinstance(actor,gameobjects.EventfulActor):
-            current_actor = actor
-            current_actor.start_event()
-         
+   if not game_done:
+      game_map.blit(content.background_img,(0,0))
+      group.draw(game_map)
+      camera_area =Rect(camera_offset_x,camera_offset_y,w,h)
+      croshair_area = Rect(200,200,400,400)
+      croshair_area.center = camera_area.center
+      any_check = False
+      
+      for actor in group.sprites():
+         if croshair_area.contains(actor.rect):
+            any_check = True
 
-   pygame.draw.rect(game_map,yes_color if any_check else no_color,croshair_area,3)
-   camera =  pygame.transform.box_blur(game_map.subsurface(camera_area),z_pulse + 1,repeat_edge_pixels=False)  
-   # effect_camera = camera.copy()
-   # camera = pygame.transform.box_blur(camera,z_pulse + 1,repeat_edge_pixels=False)
-   screen.blit(camera,(0,0))
+            if isinstance(actor,gameobjects.LaserExitActor):
+               current_actor = actor
+               current_actor.start_event()
+
+            elif isinstance(actor,gameobjects.EventfulActor):
+               current_actor = actor
+               current_actor.start_event()
+
+            
+
+      pygame.draw.rect(game_map,yes_color if any_check else no_color,croshair_area,3)
+      camera =  pygame.transform.box_blur(game_map.subsurface(camera_area),z_pulse + 1,repeat_edge_pixels=False)  
+      screen.blit(camera,(0,0))
+   else:
+      screen.blit(game_map,(0,0))
    pygame.display.flip()
    clock.tick(60)
 

@@ -11,13 +11,14 @@ EXIT_EVENT_START        = USEREVENT + 3
 EXIT_EVENT_END          = USEREVENT + 4
 
 START_LASER_EVENT       = USEREVENT + 5
+END_LASER_EVENT         = USEREVENT + 6
 
 
 class Actor(sprite.Sprite):
     def __init__(self,mask,position):
         super(Actor,self).__init__()
-        self.mask = mask
-        self.image = self.mask.convert_alpha()
+        self.mask = mask.convert_alpha()
+        self.image = self.mask.copy()
         self.rect = self.image.get_rect()
         self.rect.center = position
 
@@ -69,6 +70,8 @@ class EventfulActor(Actor):
         self.soundbite = soundbite
         self.event_done = False
         self.channel = mixer.Channel(0)
+        self.grow = False
+        self.growstep = 0
     
 
     def start_event(self):
@@ -78,7 +81,13 @@ class EventfulActor(Actor):
         event.post(event.Event(ACTOR_EVENT_START))
         self.channel.set_endevent(ACTOR_EVENT_END)
         self.channel.play(self.soundbite)
+        # self.scale(1.5)
+        self.grow = True
         self.event_done = True
+
+
+
+        # return super().update()
 
 class ExitActor(EventfulActor):
     def __init__(self, mask, position, soundbite):
@@ -95,8 +104,20 @@ class LaserExitActor(ExitActor):
         self.channel.play(self.soundbite)
         event.post(Event(START_LASER_EVENT))
 
+    def update(self):
+        if self.grow:
+            if self.growstep > 100:
+                event.post(Event())
+                self.grow = False
+            self.growstep+= 1
+            or_x,or_y = self.mask.get_size()
+            nw_x = or_x + round(self.growstep)
+            nw_y = or_y + round(self.growstep)
+            self.image = transform.smoothscale(self.mask,(nw_x,nw_y))
+            self.rect = self.image.get_rect(center = self.rect.center)      
 
-    def scale(self,size):
-        center = self.image.get_rect().center
-        self.image = transform.scale_by(self.mask,size) 
-        self.rect = self.image.get_rect(center=center)
+            
+        else:
+            super().update()
+
+
