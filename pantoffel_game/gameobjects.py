@@ -86,4 +86,6 @@ class ExitActor(EventfulActor):
 
 class LaserExitActor(ExitActor):
     def scale(self):
+        center = self.rect.center
         self.image = transform.scale_by(self.image,1.5) 
+        self.rect.center = center

@@ -286,6 +286,7 @@ while running:
          content = level2Content()
       
       elif event.type == START_LASER_EVENT:
+         print("laser event start")
          pygame.time.set_timer(TIMER_FLASH_EVENT,100)
          laser_enabled = True
 
@@ -305,6 +306,7 @@ while running:
          flash_counter+=1
 
       elif event.type == LASER_SHOT:
+         print("laser event shot")
          pygame.time.set_timer(SCALE_LASER_TIMER,100)
       
       elif event.type == SCALE_LASER_TIMER:
@@ -313,8 +315,10 @@ while running:
          print(f"scale step = {scale_counter}")
          if scale_counter > 30:
             pygame.time.set_timer(SCALE_LASER_TIMER,0)
+            pygame.time.set_timer(TIMER_FLASH_EVENT,0)
             print("done scaling!")
-            # pygame.event.post(UNLOCK_EVENT)
+            pygame.event.post(UNLOCK_EVENT)
+      
       elif event.type == UNLOCK_EVENT:
          # unlock it and...
          lock_servo.angle = SERVO_UNLOCK_ANGLE
@@ -391,7 +395,7 @@ while running:
          any_check = True
          
          if isinstance(actor,gameobjects.LaserExitActor):
-            current_actor = actor()
+            current_actor = actor
             current_actor.start_event()
             pygame.event.post(Event(START_LASER_EVENT))
          
