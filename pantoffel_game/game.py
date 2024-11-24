@@ -39,12 +39,16 @@ BLUR_MAX = 100
 
 # test..
 
-LASER_SEQUENCE = pygame.USEREVENT+ 12
-
+LASER_SEQUENCE    = pygame.USEREVENT+ 12
 TIMER_FLASH_EVENT =pygame.USEREVENT + 11
+
+UNLOCK_EVENT      = pygame.USEREVENT + 13
 TIMER_LOCK_EVENT  = pygame.USEREVENT + 10
 
+START_LASER_EVENT = pygame.USEREVENT + 14
+LASER_SHOT        = pygame.USEREVENT + 15
 
+SCALE_LASER_TIMER = pygame.USEREVENT + 16
 
 x_pulse = 0
 y_pulse = 0
@@ -72,19 +76,26 @@ def z_inc_ev(value):
    if holding:
       z_pulse+=value
       print(f"z_pulse:{z_pulse}")
+   if releasing:
+      z_pulse -= value
+      print(f"z_pulse:{z_pulse}")
+
+def shoot_laser_ev(value):
+   if laser_enabled:
+      pygame.event.post(Event(LASER_SHOT))
 
 def quit_ev():
    global q_flag
    q_flag = True
 
-def laser_event():
-   global lock_servo,unlock_flag
-   unlock_flag = True
-   lock_servo.angle = SERVO_UNLOCK_ANGLE
+# def laser_event():
+#    global lock_servo,unlock_flag
+#    unlock_flag = True
+#    lock_servo.angle = SERVO_UNLOCK_ANGLE
 
-def lock_event():
-   global lock_servo
-   lock_servo.angle = SERVO_LOCK_ANGLE
+# def lock_event():
+#    global lock_servo
+#    lock_servo.angle = SERVO_LOCK_ANGLE
 
 x_encoder = None
 y_encoder = None
@@ -103,13 +114,14 @@ lock_servo = None
 
 media = "media/"
 
-
+pygame.init()
 
 #linux:
 if platform.system() == 'Linux':
    print("linux mode!")
    from gpiozero import RotaryEncoder, Button, AngularServo, LED
    x_encoder = RotaryEncoder(X_ENC1,X_ENC2)
+   
    x_encoder.when_rotated_clockwise          = lambda : x_inc_ev(1)
    x_encoder.when_rotated_counter_clockwise  = lambda : x_inc_ev(-1)
 
@@ -122,7 +134,7 @@ if platform.system() == 'Linux':
    z_encoder.when_rotated_counter_clockwise  = lambda : z_inc_ev(-1)
 
    laser_button = Button(LASER, pull_up = True, bounce_time = 0.3)
-   laser_button.when_pressed                 = laser_event
+   laser_button.when_pressed                 = shoot_laser_ev
 
    laser_light = LED(LASER_WARNING_LIGHT)
    laser_light.on() #<-- pull up high side
@@ -130,13 +142,8 @@ if platform.system() == 'Linux':
    laser_warning_a = LED(WARNING_LIGHT_A)
    laser_warning_b = LED(WARNING_LIGHT_B)
  
-   # escape_button = Button(ESCAPE, pull_up = True, bounce_time = 0.3)
-   # escape_button.when_pressed                = quit_ev 
-
    lock_servo = AngularServo(SERVO, min_angle=SERVO_ANGLE_MIN, max_angle=SERVO_ANGLE_MAX)
    lock_servo.angle = SERVO_LOCK_ANGLE
-   
-   pygame.event.post(Event(LASER_SEQUENCE))
 
    media = "media/"
    # lock_servo = Servo(SERVO,)
@@ -147,7 +154,7 @@ elif platform.system() == 'Windows':
    media = "media/"
    screen = pygame.display.set_mode((840, 620))
 
-pygame.init()
+
 
 pygame.mouse.set_visible(False) 
 pygame.display.set_caption("Hello World")
@@ -185,9 +192,10 @@ def level1Content():
 
    #images:
    arrow_img =       pygame.image.load(f"{media}arrow.png").convert_alpha()
-   ball_img =        pygame.image.load(f"{media}cartman.svg").convert_alpha()
+   ball_img =        pygame.image.load(f"{media}ball.png").convert_alpha()
    star_img =        pygame.image.load(f"{media}star.png").convert_alpha()
-   triangle_img =    pygame.image.load(f"{media}cartman.svg").convert_alpha()
+   triangle_img =    pygame.image.load(f"{media}triangle.png").convert_alpha()
+   cartman =         pygame.image.load(f"{media}cartman.svg").convert_alpha()
 
    #sound
    troep = pygame.mixer.Sound(f"{media}troep.wav")
@@ -201,17 +209,18 @@ def level1Content():
    rtnLevelContent.group.add(gameobjects.EventfulActor(star_img,(400,1500),troep))
    rtnLevelContent.group.add(gameobjects.EventfulActor(star_img,(800,800),troep))
 
+   rtnLevelContent.group.add(gameobjects.LaserExitActor(cartman,(1500,1500),troep))
+
+
    # exit actor
    rtnLevelContent.exit = gameobjects.ExitActor(triangle_img,(map_width /2 , map_height / 2),troep)
-   
-
    return rtnLevelContent
 
 # level 2:
 def level2Content():   
    rtnLevelContent = LevelContent("grid_2.jpg",map_size)
    arrow_img = pygame.image.load(f"{media}arrow.png")
-   ball_img = pygame.image.load(f"{media}cartman.svg")
+   ball_img = pygame.image.load(f"{media}ball.png")
    triangle_img = pygame.image.load(f"{media}triangle.png")
    star_img = pygame.image.load(f"{media}star.png")
 
@@ -226,17 +235,19 @@ def level2Content():
    rtnLevelContent.exit = gameobjects.ExitActor(triangle_img,(map_width /2 , map_height / 2),troep)
    return rtnLevelContent
 
-troepsound = pygame.mixer.Sound(f"{media}/troep.wav")
+# troepsound = pygame.mixer.Sound(f"{media}/troep.wav")
 
 content = level1Content()
+
+
 
 running = True
 pausing = False # <-- playing any event
 holding = False # <-  playing exit event
 releasing = False
+laser_enabled = False
 
 current_actor = None
-
 
 yes_color = (0,255,0)
 no_color = (255,0,0)
@@ -244,19 +255,19 @@ no_color = (255,0,0)
 croshair = Rect()
 
 flash_counter = 0
-
+scale_counter = 0
 
 
 while running:
    if q_flag:
-      running = False
-   
+      running = False 
 
    if unlock_flag:
       unlock_flag = False
       pygame.time.set_timer(TIMER_LOCK_EVENT,1000,1)
 
    for event in pygame.event.get():
+
       if event.type == pygame.QUIT:
          running = False
       elif event.type == ACTOR_EVENT_START:
@@ -273,28 +284,44 @@ while running:
          holding = False
          releasing = True
          content = level2Content()
-      elif event.type == TIMER_LOCK_EVENT:
-         lock_event()
       
-      elif event.type == LASER_SEQUENCE:
-          pygame.time.set_timer(TIMER_FLASH_EVENT,50)
+      elif event.type == START_LASER_EVENT:
+         pygame.time.set_timer(TIMER_FLASH_EVENT,100)
+         laser_enabled = True
 
       elif event.type == TIMER_FLASH_EVENT:
          flash_counter %= 20
-         if (flash_counter % 10) == 0:
+         if flash_counter == 10:
             laser_warning_a.on()
             laser_light.toggle()
          else:
             laser_warning_a.off()
          
-         if (flash_counter % 20) == 0:
-            laser_warning_a.on()
+         if flash_counter == 0:
+            laser_warning_b.on()
             laser_light.toggle()
          else:
-            laser_warning_a.off()
-         
+            laser_warning_b.off()
          flash_counter+=1
 
+      elif event.type == LASER_SHOT:
+         pygame.time.set_timer(SCALE_LASER_TIMER,100)
+      
+      elif event.type == SCALE_LASER_TIMER:
+         scale_counter += 1
+         current_actor.scale()
+         print(f"scale step = {scale_counter}")
+         if scale_counter > 30:
+            pygame.time.set_timer(SCALE_LASER_TIMER,0)
+            print("done scaling!")
+            # pygame.event.post(UNLOCK_EVENT)
+      elif event.type == UNLOCK_EVENT:
+         # unlock it and...
+         lock_servo.angle = SERVO_UNLOCK_ANGLE
+         pygame.time.set_timer(TIMER_LOCK_EVENT,1000,1)
+      elif event.type == TIMER_LOCK_EVENT:
+         # lock it!
+         lock_servo.angle = SERVO_LOCK_ANGLE
 
 
 
@@ -362,9 +389,16 @@ while running:
    for actor in group.sprites():
       if croshair_area.contains(actor.rect):
          any_check = True
-         if isinstance(actor,gameobjects.EventfulActor):
+         
+         if isinstance(actor,gameobjects.LaserExitActor):
+            current_actor = actor()
+            current_actor.start_event()
+            pygame.event.post(Event(START_LASER_EVENT))
+         
+         elif isinstance(actor,gameobjects.EventfulActor):
             current_actor = actor
             current_actor.start_event()
+         
 
    pygame.draw.rect(game_map,yes_color if any_check else no_color,croshair_area,3)
    camera =  pygame.transform.box_blur(game_map.subsurface(camera_area),z_pulse + 1,repeat_edge_pixels=False)  
