@@ -1,17 +1,12 @@
 import math
 
 from pygame.event import Event
-from pygame import USEREVENT
+#from pygame import USEREVENT
+from events import *
 from pygame import sprite,mixer,event,transform
 from random import Random
 
-ACTOR_EVENT_START       = USEREVENT + 1
-ACTOR_EVENT_END         = USEREVENT + 2
-EXIT_EVENT_START        = USEREVENT + 3
-EXIT_EVENT_END          = USEREVENT + 4
 
-START_LASER_EVENT       = USEREVENT + 5
-END_LASER_EVENT         = USEREVENT + 6
 
 
 class Actor(sprite.Sprite):
@@ -96,20 +91,20 @@ class ExitActor(EventfulActor):
     def start_event(self):
         super().start_event()
 
-class LaserExitActor(ExitActor):
+class LaserExitActor(EventfulActor):
     def start_event(self):
         if self.event_done:
             return
         self.event_done = True
         self.channel.play(self.soundbite)
-        event.post(Event(START_LASER_EVENT))
+        # event.post(Event(START_LASER_EVENT))
 
     def update(self):
         if self.grow:
-            if self.growstep > 100:
+            if self.growstep > 1000:
                 event.post(Event(END_LASER_EVENT))
                 self.grow = False
-            self.growstep+= 1
+            self.growstep+= 10
             or_x,or_y = self.mask.get_size()
             nw_x = or_x + round(self.growstep)
             nw_y = or_y + round(self.growstep)
