@@ -181,6 +181,8 @@ class LevelContent():
       self.exit = None
       self.event_count = 0
       self.exit_spawned = False
+      # self.background_sound_channel = None
+      self.background_sound = None
 
 # level 1:
 def level1Content():
@@ -206,6 +208,9 @@ def level1Content():
    rtnLevelContent = LevelContent()
    
    rtnLevelContent.background = pygame.transform.scale(images["achtergrond"],map_size)
+   
+   rtnLevelContent.background_sound = sounds["underwater"]
+
 
    # background objects:
    rtnLevelContent.group.add(gameobjects.TravelingActor(images["passief1"], (map_width /2 , map_height / 2),30,1))
@@ -215,10 +220,12 @@ def level1Content():
    # actors:
    rtnLevelContent.group.add(gameobjects.EventfulActor(images["event1"],(1500,400),troep))
    rtnLevelContent.group.add(gameobjects.EventfulActor(images["event4"],(800,1000),troep))
-   rtnLevelContent.group.add(gameobjects.EventfulActor(images["event3"],(500,500),troep))
+   rtnLevelContent.group.add(gameobjects.EventfulActor(images["event3"],(500,500), sounds["beerdiertje"]))
    # rtnLevelContent.group.add(gameobjects.EventfulActor(images["event4"],(500,500),troep))
 
    rtnLevelContent.exit = gameobjects.ExitActor(images["event2"],(map_width /2 , map_height / 2),troep)
+
+   # rtnLevelContent.background_sound.play()
 
    rtnLevelContent.event_count = 3
 
@@ -234,7 +241,10 @@ def level2Content():
    sounds = {Path(x).stem: pygame.mixer.Sound(join(snd_location, x ))for x in listdir(snd_location)}
    troep = sounds["troep"]
 
+
    rtnLevelContent = LevelContent()
+
+   rtnLevelContent.background_sound = sounds["space"]
    rtnLevelContent.background =  pygame.transform.scale(images["achtergrond"],map_size)
    rtnLevelContent.event_count = 1
 
@@ -284,6 +294,11 @@ croshair = None
 flash_counter = 0
 scale_counter = 0
 
+background_sound_channel = pygame.mixer.Channel(2)
+background_sound_channel.set_volume(0.2)
+
+background_sound_channel.play(content.background_sound,-1)
+# content.background_sound.play(-1)
 
 while running:
    for event in pygame.event.get():
@@ -315,6 +330,7 @@ while running:
          holding = False
          releasing = True
          content = level2Content()
+         background_sound_channel.play(content.background_sound,-1)
       
       #start end sequence event, lights and sounds..
       elif event.type == START_LASER_EVENT:
