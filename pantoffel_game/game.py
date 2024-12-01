@@ -114,10 +114,10 @@ if platform.system() == 'Linux':
       laser_light.toggle()
 
    def warning_light_a_do(v):
-      laser_warning_a.on if v else laser_warning_a.off
+      laser_warning_a.on() if v else laser_warning_a.off()
    
    def warning_light_b_do(v):
-      laser_warning_b.on if v else laser_warning_b.off
+      laser_warning_b.on() if v else laser_warning_b.off()
 
    #
    # lock_servo = Servo(SERVO,)
@@ -149,8 +149,8 @@ pygame.mouse.set_visible(False)
 
 [w,h] = pygame.display.get_window_size()
 
-map_width = 2000
-map_height = 2000
+map_width = 2338
+map_height = 1700
 
 viewing_border_width = 200
 viewing_border_height = 200
@@ -193,57 +193,65 @@ def level1Content():
    sounds = {Path(x).stem: pygame.mixer.Sound(join(snd_location, x ))for x in listdir(snd_location)}
    
    #images:
-   arrow_img =       images["arrow"]
-   ball_img =        images["ball"]
-   star_img =        images["star"]
-   triangle_img =    images["triangle"]
-   cartman =         images["cartman"]
+   # arrow_img =       images["arrow"]
+   # ball_img =        images["ball"]
+   # star_img =        images["star"]
+   # triangle_img =    images["triangle"]
+   # cartman =         images["cartman"]
+   # passief_1
 
    #sound
    troep = sounds["troep"]
 
    rtnLevelContent = LevelContent()
    
-   rtnLevelContent.background = pygame.transform.scale(images["grid"],map_size)
+   rtnLevelContent.background = pygame.transform.scale(images["achtergrond"],map_size)
 
    # background objects:
-   rtnLevelContent.group.add(gameobjects.TravelingActor(ball_img, (map_width /2 , map_height / 2),30,1))
-   rtnLevelContent.group.add(gameobjects.Actor(arrow_img,(200,200)))
-   rtnLevelContent.group.add(gameobjects.Actor(arrow_img,(300,300)))
+   rtnLevelContent.group.add(gameobjects.TravelingActor(images["passief1"], (map_width /2 , map_height / 2),30,1))
+   rtnLevelContent.group.add(gameobjects.TravelingActor(images["passief2"], (map_width /4 , map_height / 3),100,1))
+   # rtnLevelContent.group.add(gameobjects.Actor(images[""],(200,200)))
 
    # actors:
-   rtnLevelContent.group.add(gameobjects.EventfulActor(star_img,(400,1500),troep))
-   rtnLevelContent.group.add(gameobjects.EventfulActor(star_img,(800,800),troep))
-   rtnLevelContent.group.add(gameobjects.LaserExitActor(cartman,(1500,1500),troep))
+   rtnLevelContent.group.add(gameobjects.EventfulActor(images["event1"],(1500,400),troep))
+   rtnLevelContent.group.add(gameobjects.EventfulActor(images["event4"],(800,1000),troep))
+   rtnLevelContent.group.add(gameobjects.EventfulActor(images["event3"],(500,500),troep))
+   # rtnLevelContent.group.add(gameobjects.EventfulActor(images["event4"],(500,500),troep))
 
-   rtnLevelContent.exit = gameobjects.ExitActor(triangle_img,(map_width /2 , map_height / 2),troep)
+   rtnLevelContent.exit = gameobjects.ExitActor(images["event2"],(map_width /2 , map_height / 2),troep)
 
-   rtnLevelContent.event_count = 2
+   rtnLevelContent.event_count = 3
 
    # exit actor
-   
    return rtnLevelContent
 
 # level 2:
 def level2Content():   
    img_location = join('media', 'lvl2' , 'images')
    images = {Path(x).stem: pygame.image.load(join(img_location, x )).convert_alpha() for x in listdir(img_location)}
-   cartman =         images["cartman"]
-   star_img =        images["star"]
 
    snd_location = join('media', 'lvl2' , 'sounds')
    sounds = {Path(x).stem: pygame.mixer.Sound(join(snd_location, x ))for x in listdir(snd_location)}
    troep = sounds["troep"]
 
    rtnLevelContent = LevelContent()
-   rtnLevelContent.background =  pygame.transform.scale(images["grid_2"],map_size)
+   rtnLevelContent.background =  pygame.transform.scale(images["achtergrond"],map_size)
    rtnLevelContent.event_count = 1
 
+
+   # background objects:
+   rtnLevelContent.group.add(gameobjects.TravelingActor(images["passief1"], (map_width /2 , map_height / 2),30,1))
+   rtnLevelContent.group.add(gameobjects.TravelingActor(images["passief2"], (map_width /4 , map_height / 3),100,1))
+
    #event actors:
-   rtnLevelContent.group.add(gameobjects.EventfulActor(star_img,(400,1500),troep))
-   
+   rtnLevelContent.group.add(gameobjects.EventfulActor(images["event1"],(1500,400),troep))
+   rtnLevelContent.group.add(gameobjects.EventfulActor(images["event2"],(800,1000),troep))
+   rtnLevelContent.group.add(gameobjects.EventfulActor(images["event4"],(500,500),troep))
+
    #exit actors:
-   rtnLevelContent.exit = gameobjects.LaserExitActor(cartman,(1500,1500),troep)
+   rtnLevelContent.exit = gameobjects.LaserExitActor(images["event3"],(map_width /2 , map_height / 2),troep)
+
+   rtnLevelContent.event_count = 3
 
    return rtnLevelContent
 
@@ -427,14 +435,14 @@ while running:
       game_map.blit(content.background,(0,0))
       group.draw(game_map)
       camera_area = camera_rect
-      croshair_area = Rect(200,200,400,400)
+      croshair_area = Rect(0,0,200,200)
       croshair_area.center = camera_area.center
       any_check = False
       
       for actor in group.sprites():
-         if croshair_area.contains(actor.rect):
+         if croshair_area.collidepoint(actor.rect.center):
             any_check = True
-            
+
 
             if isinstance(actor,gameobjects.EventfulActor) and not actor.event_done:
                content.event_count -= 1
