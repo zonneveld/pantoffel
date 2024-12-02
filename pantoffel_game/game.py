@@ -180,6 +180,7 @@ class LevelContent():
       self.group = Group()
       self.exit = None
       self.event_count = 0
+      self.sounds =None
       self.exit_spawned = False
       # self.background_sound_channel = None
       self.background_sound = None
@@ -244,6 +245,7 @@ def level2Content():
 
    rtnLevelContent = LevelContent()
 
+   rtnLevelContent.sounds = sounds
    rtnLevelContent.background_sound = sounds["space"]
    rtnLevelContent.background =  pygame.transform.scale(images["achtergrond"],map_size)
    rtnLevelContent.event_count = 1
@@ -261,13 +263,13 @@ def level2Content():
    #exit actors:
    rtnLevelContent.exit = gameobjects.LaserExitActor(images["event3"],(map_width /2 , map_height / 2),troep)
 
-   rtnLevelContent.event_count = 3
+   rtnLevelContent.event_count = 1
 
    return rtnLevelContent
 
 # troepsound = pygame.mixer.Sound(f"{media}/troep.wav")
 
-content = level1Content()
+content = level2Content()
 
 
 
@@ -337,6 +339,8 @@ while running:
       #start end sequence event, lights and sounds..
       elif event.type == START_LASER_EVENT:
          print("laser event start")
+         background_sound_channel.play(content.sounds["alarm"],-1)
+         background_sound_channel.set_volume(0.01)
          pausing = True
          pygame.time.set_timer(TIMER_FLASH_EVENT,100)
          laser_enabled = True
@@ -362,6 +366,7 @@ while running:
       #laser shot, start to grow actor..
       elif event.type == LASER_SHOT:
          print("laser event shot")
+         content.sounds["laser_attack"].play()
          current_actor.grow = True
          anger_effect = True
 
