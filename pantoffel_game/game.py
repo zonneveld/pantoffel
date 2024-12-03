@@ -265,7 +265,7 @@ def level2Content():
    rtnLevelContent.group.add(gameobjects.EventfulActor(images["event4"],(609, 1240),sounds["kerst"]))
 
    #exit actors:
-   rtnLevelContent.exit = gameobjects.LaserExitActor(images["event3"],(map_width /2 , map_height / 2),troep)
+   rtnLevelContent.exit = gameobjects.LaserExitActor(images["event3"],(map_width /2 , map_height / 2),sounds["outro"])
 
    # rtnLevelContent.event_count = 1
 
@@ -306,6 +306,8 @@ background_sound_channel = pygame.mixer.Channel(2)
 background_sound_channel.play(content.background_sound,-1)
 background_sound_channel.set_volume(0.03)
 pygame.mixer.Channel(0).play(content.sounds["intro"])
+pygame.mixer.Channel(0).set_volume(0.5)
+
 
 # content.background_sound.play(-1)
 
