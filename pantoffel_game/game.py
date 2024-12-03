@@ -250,7 +250,7 @@ def level2Content():
    rtnLevelContent.sounds = sounds
    rtnLevelContent.background_sound = sounds["space"]
    rtnLevelContent.background =  pygame.transform.scale(images["achtergrond"],map_size)
-   rtnLevelContent.event_count = 1
+   rtnLevelContent.event_count = 3
 
 
    # background objects:
@@ -267,7 +267,7 @@ def level2Content():
    #exit actors:
    rtnLevelContent.exit = gameobjects.LaserExitActor(images["event3"],(map_width /2 , map_height / 2),troep)
 
-   rtnLevelContent.event_count = 1
+   # rtnLevelContent.event_count = 1
 
    return rtnLevelContent
 

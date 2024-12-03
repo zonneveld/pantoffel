@@ -76,6 +76,7 @@ class EventfulActor(Actor):
         event.post(event.Event(ACTOR_EVENT_START))
         self.channel.set_endevent(ACTOR_EVENT_END)
         self.channel.play(self.soundbite)
+        self.channel.set_volume(0.5)
         # self.scale(1.5)
         self.grow = True
         self.event_done = True
