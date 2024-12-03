@@ -204,10 +204,10 @@ def level1Content():
    # passief_1
 
    #sound
-   troep = sounds["troep"]
+   # troep = sounds["troep"]
 
    rtnLevelContent = LevelContent()
-   
+   rtnLevelContent.sounds = sounds
    rtnLevelContent.background = pygame.transform.scale(images["achtergrond"],map_size)
    
    rtnLevelContent.background_sound = sounds["underwater"]
@@ -216,6 +216,8 @@ def level1Content():
    # background objects:
    rtnLevelContent.group.add(gameobjects.TravelingActor(images["passief1"], (map_width /2 , map_height / 2),30,1))
    rtnLevelContent.group.add(gameobjects.TravelingActor(images["passief2"], (map_width /4 , map_height / 3),100,1))
+   rtnLevelContent.group.add(gameobjects.TravelingActor(images["passief3"], (map_width /5 , map_height / 2),127,3))
+   rtnLevelContent.group.add(gameobjects.TravelingActor(images["passief4"], (map_width /2 , map_height / 5),45 + 180,4))
    # rtnLevelContent.group.add(gameobjects.Actor(images[""],(200,200)))
 
    # actors:
@@ -254,6 +256,8 @@ def level2Content():
    # background objects:
    rtnLevelContent.group.add(gameobjects.TravelingActor(images["passief1"], (map_width /2 , map_height / 2),30,1))
    rtnLevelContent.group.add(gameobjects.TravelingActor(images["passief2"], (map_width /4 , map_height / 3),100,1))
+   rtnLevelContent.group.add(gameobjects.TravelingActor(images["passief3"], (map_width /5 , map_height / 2),127,3))
+   rtnLevelContent.group.add(gameobjects.TravelingActor(images["passief4"], (map_width /2 , map_height / 5),45 + 180,4))
 
    #event actors:
    rtnLevelContent.group.add(gameobjects.EventfulActor(images["event1"],(1689, 1190),sounds["plankdeeltjes"]))
@@ -269,7 +273,7 @@ def level2Content():
 
 # troepsound = pygame.mixer.Sound(f"{media}/troep.wav")
 
-content = level2Content()
+content = level1Content()
 
 
 
@@ -301,10 +305,14 @@ background_sound_channel = pygame.mixer.Channel(2)
 
 background_sound_channel.play(content.background_sound,-1)
 background_sound_channel.set_volume(0.03)
+pygame.mixer.Channel(0).play(content.sounds["intro"])
+
 # content.background_sound.play(-1)
 
 while running:
    for event in pygame.event.get():
+
+      # if event.type == INTRO_EVENT_START:
 
       #quitting..
       if event.type == pygame.QUIT:
@@ -386,6 +394,7 @@ while running:
       elif event.type == TIMER_LOCK_EVENT:
          # lock it!
          servo_do(SERVO_LOCK_ANGLE)
+         running = False
 
 
 
