@@ -396,7 +396,10 @@ while running:
       elif event.type == TIMER_LOCK_EVENT:
          # lock it!
          servo_do(SERVO_LOCK_ANGLE)
-         running = False
+         pygame.mixer.stop()
+         laser_enabled = False
+         pausing = True
+         # running = False
 
 
 
